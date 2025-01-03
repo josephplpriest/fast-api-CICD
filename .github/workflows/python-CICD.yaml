@@ -1,0 +1,24 @@
+name: fast-api-CICD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: clone repo
+        uses: actions/checkout@v4
+      
+
+      - name: Install uv and set up python
+        uses: astral-sh/setup-uv@v3
+       
+      - name: Test with project python version/packages
+        run: uv run --frozen pytest app/tests.py  
+
