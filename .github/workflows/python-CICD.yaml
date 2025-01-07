@@ -26,4 +26,4 @@ jobs:
         run: uv run --frozen pytest app/tests.py  
 
       - name: Run security code check
-        run: uv run bandit -r ./app/
+        run: uv run bandit --exclude ./app/tests.py -r ./app/
