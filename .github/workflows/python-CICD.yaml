@@ -18,7 +18,12 @@ jobs:
 
       - name: Install uv and set up python
         uses: astral-sh/setup-uv@v3
-       
+      
+      - name: Lint python code
+        run: uv run flake8 ./app/
+
       - name: Test with project python version/packages
         run: uv run --frozen pytest app/tests.py  
 
+      - name: Run security code check
+        run: uv run bandit -r ./app/
