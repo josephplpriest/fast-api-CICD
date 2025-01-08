@@ -27,3 +27,7 @@ jobs:
 
       - name: Run security code check
         run: uv run bandit --exclude ./app/tests.py -r ./app/
+
+      - uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
