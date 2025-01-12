@@ -82,6 +82,5 @@ jobs:
           
       - name: Build and Push Container
         run: |-
-            cd "${{ inputs.docker_build_dir }}"
-            docker build -t "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}" ./
+            docker build -t "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}" ./app/Dockerfile
             docker push "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}"
