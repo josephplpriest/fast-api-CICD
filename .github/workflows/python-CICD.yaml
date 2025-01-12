@@ -6,11 +6,11 @@ on:
       path_to_dockerfile:
         description: path to dockerfile
         type: string
-        default: "app/Dockerfile"
+        default: 'app/Dockerfile'
       docker_build_dir:
         description: path to run docker build
         type: string
-        default: "app/"
+        default: 'app/'
       image_tag:
         description: tag to give image before pushing to GCP
         type: string
@@ -23,9 +23,6 @@ on:
         description: qualified url
         type: string
         default: us-central1-docker.pkg.dev/ci-cd-github-actions-447612/fast-api-cicd
-
-
-concurrency: ci-${{ github.repository }}-docker-pipeline 
 
 jobs:
   lint-and-scan:
@@ -70,20 +67,10 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         id: auth
         with:
-          token_format: 'access_token'
           project_id: 'ci-cd-github-actions-447612'
-          workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
-
-      - name: Docker Auth
-        id: docker-auth
-        uses: 'docker/login-action@v1'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
-          registry: '${{ inputs.artifact_registry_url }}'            
+          workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'        
 
       - name: Build and Push Container
         run: |-
-            gcloud auth configure-docker us-central1-docker.pkg.dev
             docker build -t "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}" ./
             docker push "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}"
