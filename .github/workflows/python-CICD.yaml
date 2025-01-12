@@ -50,8 +50,29 @@ jobs:
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
 
-  docker:
+  build-scan:
+
     needs: lint-and-scan
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build an image from Dockerfile
+        run: docker build -t ${{ inputs.image_tag }}:${{ github.sha }} .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ inputs.image_tag }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  docker-push:
+
+    needs: build-scan
     
     runs-on: ubuntu-latest
 
@@ -69,6 +90,10 @@ jobs:
         with:
           project_id: 'ci-cd-github-actions-447612'
           workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'        
+
+      - name: Configure Docker for GCP Artifact Registry
+        run: |-
+            gcloud auth configure-docker ${{ inputs.gcp_region }}-docker.pkg.dev
 
       - name: Build and Push Container
         run: |-
