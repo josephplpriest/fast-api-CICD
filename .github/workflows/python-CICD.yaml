@@ -12,17 +12,18 @@ on:
         type: string
         default: "app/"
       image_tag:
-        description: tag to give image before pushing to ECR
+        description: tag to give image before pushing to GCP
         type: string
         default: fast-api-demo
-      lifecycle_policy:
-        description: path to lifecyle policy json for image in ECR
+      gcp_region:
+        description: gcp region
         type: string
-        default: "app/policy.json"
-      aws_region:
-        description: aws region
+        default: us-central1
+      artifact_registry_url:
+        description: qualified url
         type: string
-        default: us-east-1
+        default: us-central1-docker.pkg.dev/ci-cd-github-actions-447612/fast-api-cicd
+
 
 concurrency: ci-${{ github.repository }}-docker-pipeline 
 
@@ -61,10 +62,26 @@ jobs:
       id-token: write
       contents: read
 
-    outputs:
-      image_tag: ${{ steps.build-publish.outputs.image_tag }}
-      full_image: ${{ steps.build-publish.outputs.full_image }}
-    
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone code
+        uses: actions/checkout@v4
 
+      - name: Authenticate via GCP/OIDC
+        uses: 'google-github-actions/auth@v2'
+        id: auth
+        with:
+          project_id: 'ci-cd-github-actions-447612'
+          workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+
+      - name: Repository access
+        uses: 'docker/login-action@v1'
+        with:
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+          registry: 'fast-api-cicd'
+
+      - name: Build and Push Container
+        run: |-
+            cd "${{ inputs.docker_build_dir }}"
+            docker build -t "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}" ./
+            docker push "${{ inputs.artifact_registry_url }}/${{ inputs.image_tag }}:${{ github.sha }}"
