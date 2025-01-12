@@ -70,12 +70,18 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         id: auth
         with:
+          token_format: 'access_token'
           project_id: 'ci-cd-github-actions-447612'
           workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-            
+      - name: Docker Auth
+        id: docker-auth
+        uses: 'docker/login-action@v1'
+        with:
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+          registry: '${{ inputs.artifact_registry_url }}'            
+
       - name: Build and Push Container
         run: |-
             gcloud auth configure-docker us-central1-docker.pkg.dev
