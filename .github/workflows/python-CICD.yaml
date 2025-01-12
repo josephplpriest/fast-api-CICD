@@ -1,13 +1,33 @@
 name: fast-api-CICD
 
 on:
-  push:
-    branches:
-      - main
-      - dev
+  workflow_dispatch:
+    inputs:
+      path_to_dockerfile:
+        description: path to dockerfile
+        type: string
+        default: "app/Dockerfile"
+      docker_build_dir:
+        description: path to run docker build
+        type: string
+        default: "app/"
+      image_tag:
+        description: tag to give image before pushing to ECR
+        type: string
+        default: fast-api-demo
+      lifecycle_policy:
+        description: path to lifecyle policy json for image in ECR
+        type: string
+        default: "app/policy.json"
+      aws_region:
+        description: aws region
+        type: string
+        default: us-east-1
+
+concurrency: ci-${{ github.repository }}-docker-pipeline 
 
 jobs:
-  build:
+  lint-and-scan:
 
     runs-on: ubuntu-latest
 
@@ -31,3 +51,20 @@ jobs:
       - uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
+
+  docker:
+    needs: lint-and-scan
+    
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    outputs:
+      image_tag: ${{ steps.build-publish.outputs.image_tag }}
+      full_image: ${{ steps.build-publish.outputs.full_image }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
