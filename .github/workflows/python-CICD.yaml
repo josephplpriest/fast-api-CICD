@@ -73,13 +73,13 @@ jobs:
           project_id: 'ci-cd-github-actions-447612'
           workload_identity_provider: 'projects/248413649642/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
 
-      - name: Repository access
-        uses: 'docker/login-action@v1'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
-          registry: 'fast-api-cicd'
-
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+  
+      - name: Configure Docker for Artifact Registry
+        run: |-
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          
       - name: Build and Push Container
         run: |-
             cd "${{ inputs.docker_build_dir }}"
